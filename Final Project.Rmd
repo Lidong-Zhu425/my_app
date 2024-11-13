@@ -1,0 +1,160 @@
+---
+title: "A"
+author: "LidongZhu"
+date: "2024-11-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Objective
+
+Data sources:
+1.https://www.fec.gov/introduction-campaign-finance/election-results-and-voting-information/federal-elections-2020/
+
+2.https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi%3A10.7910/DVN/PR4L8P
+
+## Load Data
+We first worked with the Excel file using the readxl package, a tool often used in R to read Excel data. The code first defines the path to the Excel file and gets the names of all the worksheets in the file using the excel_sheets function, which helps to understand the structure of the file and the distribution of its contents.
+
+Next, the code snippet reads each of the four specified worksheets using the read_excel function:
+
+1. “2. Table 1 Pres Popular Vote”: contains the results of the 2020 Presidential Popular Vote.
+
+2. “3. Table 2 Electoral & Pop Vote”: records the comparative data of electoral and popular votes.
+
+3. “6. Table 5 P&GVotesCastforCong”: provides data on votes cast in congressional elections.
+
+4.“7. Table 6 Senate by Party”: shows Senate voting results by party.
+
+```{r,echo=FALSE}
+library(readxl)
+
+file_path <- "data/federalelections2020.xlsx"  
+# Get the sheet names
+sheet_names <- excel_sheets(file_path)
+
+# Print cleaned sheet names
+cat("Cleaned sheet names in the Excel file:\n")
+for (name in sheet_names) {
+  cat(name, "\n")
+}
+
+```
+
+
+```{r,echo=FALSE}
+# Reading a specific worksheet
+sheet1 <- read_excel(file_path, sheet = "2. Table 1 Pres Popular Vote")
+sheet2 <- read_excel(file_path, sheet = "3. Table 2 Electoral & Pop Vote")
+sheet5 <- read_excel(file_path, sheet = "6. Table 5 P&GVotesCastforCong")
+sheet6 <- read_excel(file_path, sheet = "7. Table 6 Senate by Party")
+
+
+```
+
+## Data cleaning and preparation
+
+We cleaned and prepared the data read from the Excel file for further analysis. We used the dplyr package, which is a very powerful data manipulation tool in R that helps us to process and transform data easily.
+
+First, for the 2020 presidential election voting data (pres_pop_vote), we selected the desired columns from the original data table and renamed them to more intuitive names (e.g. “Candidate”, “Popular Vote Total”, “Percent of Popular Vote”). At the same time, we converted the columns involving votes and percentages to numeric types for mathematical operations and graphical presentation.
+
+For the comparison data between electoral and popular votes (electoral_pop_vote), we similarly selected and renamed the key columns and ensured that all vote data were converted to numeric types. This will make it easier for us to subsequently analyze how states performed in the presidential election.
+
+Finally, for the partisan vote data for the Senate (senate_vote), we extracted the state name and the number of votes for the two major parties (Democrat and Republican) and converted them to numeric values.
+
+Through these steps, we ensured the accuracy and applicability of the data, laying a solid foundation for the next step of data analysis and visualization.
+
+
+```{r,echo=FALSE}
+library(dplyr)
+pres_pop_vote <- sheet1 %>%
+  slice(4:41) %>%
+  select(1:3) %>%
+  rename(Candidate = 1, `Popular Vote Total` = 2, `Percent of Popular Vote` = 3) %>%
+  mutate(`Popular Vote Total` = as.numeric(`Popular Vote Total`),
+         `Percent of Popular Vote` = as.numeric(`Percent of Popular Vote`))
+
+electoral_pop_vote <- sheet2 %>%
+  slice(4:54) %>%
+  select(c(1, 4, 5, 7)) %>%
+  rename(State = 1, `Biden (D)` = 2, `Trump (R)` = 3, `Total Vote` = 4) %>%
+  mutate(`Biden (D)` = as.numeric(`Biden (D)`),
+         `Trump (R)` = as.numeric(`Trump (R)`),
+         `Total Vote` = as.numeric(`Total Vote`))
+
+senate_vote <- sheet6 %>%
+  slice(4:59) %>%
+  select(c(1, 5, 6)) %>%
+  rename(State = 1, Democratic = 2, Republican = 3) %>%
+  mutate(Democratic = as.numeric(Democratic),
+         Republican = as.numeric(Republican))
+
+
+
+```
+
+## Visualization
+Below, we provide a detailed visualization of the cleaned data to get a concrete understanding of the specific 2020 election results.
+
+### Pie Chart of Popularity Vote Distribution in General Election
+```{r,echo=FALSE}
+library(ggplot2)
+pie_data <- pres_pop_vote %>%
+  na.omit() %>%
+  select(Candidate, `Popular Vote Total`)
+
+# Calculation of the proportion of votes for each candidate in the total number of votes cast
+total_votes <- sum(pie_data$`Popular Vote Total`)
+pie_data <- pie_data %>%
+  mutate(Percent = `Popular Vote Total` / total_votes * 100)
+
+# Set a threshold to combine all votes less than the threshold as “Other”
+threshold <- 5
+other_votes <- sum(pie_data$Percent[pie_data$Percent < threshold])
+pie_data <- pie_data %>%
+  filter(Percent >= threshold) %>%
+  bind_rows(data.frame(Candidate = "Other", `Popular Vote Total` = NA, Percent = other_votes))
+
+pie(pie_data$Percent, labels = pie_data$Candidate, main = "2020 Presidential Popular Vote Distribution", col = rainbow(nrow(pie_data)))
+legend("topright", legend = pie_data$Candidate, fill = rainbow(nrow(pie_data)), cex = 0.8)
+```
+The pie chart clearly shows the proportion of votes between the main candidates, with Biden and Trump taking the majority of the votes, suggesting that they were the main contenders in the election. Candidates with small vote totals are grouped in the “other” category, highlighting the dominance of the two-party system in American politics.
+
+
+
+### Bar chart comparing interstate popular and electoral votes in presidential elections
+```{r,echo=FALSE}
+ggplot(electoral_pop_vote, aes(x = State)) +
+  geom_bar(aes(y = `Total Vote`), stat = "identity", fill = "gray", alpha = 1) +
+  geom_bar(aes(y = `Biden (D)`), stat = "identity", fill = "blue", alpha = 1) +
+  geom_bar(aes(y = `Trump (R)`), stat = "identity", fill = "red", alpha = 1) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.4)) +
+  labs(title = "2020 Presidential Electoral and Popular Vote by State",
+       y = "Votes",
+       x = "State")
+
+
+```
+This chart shows the distribution of electoral votes by state, which, when compared to the results of the popular vote, reveals possible inconsistencies between the popular vote and the electoral vote. For example, in some key swing states, the final distribution of electoral votes may be quite different despite similar popular vote numbers, emphasizing the impact of the electoral system on election outcomes.
+
+
+
+### Percentage of votes for Biden and Trump
+```{r,echo=FALSE}
+vote_percentage_plot <- ggplot(electoral_pop_vote, aes(x = State)) +
+  geom_bar(aes(y = `Biden %`), stat = "identity", fill = "blue", position = position_dodge(width = 0.8), width = 0.4) +
+  geom_bar(aes(y = `Trump %`), stat = "identity", fill = "red", position = position_dodge(width = 0.8), width = 0.4) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+  labs(title = "Vote Percentage by Candidate in 2020 Presidential Election", 
+       y = "Percentage of Votes (%)", 
+       x = "State")
+
+print(vote_percentage_plot)
+
+
+```
+This chart provides a clear view of the direct comparison of the level of support for Biden and Trump by state. As can be seen, Biden receives higher support in most east and west coast states, while Trump receives more support in some central and southern states. This distribution reveals the typical “blue state” versus “red state” distribution pattern on the U.S. political map.
