@@ -5,7 +5,7 @@ account: rvc6vi-lidong-zhu
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 13377766
-bundleId: 9382420
+bundleId: 9393677
 url: https://rvc6vi-lidong-zhu.shinyapps.io/My_App/
 version: 1
 asMultiple: FALSE

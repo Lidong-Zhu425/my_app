@@ -31,7 +31,7 @@ Next, the code snippet reads each of the four specified worksheets using the rea
 ```{r,echo=FALSE}
 library(readxl)
 
-file_path <- "data/federalelections2020.xlsx"  
+file_path <- "My_App/federalelections2020.xlsx"  
 # Get the sheet names
 sheet_names <- excel_sheets(file_path)
 
@@ -144,6 +144,10 @@ This chart shows the distribution of electoral votes by state, which, when compa
 
 ### Percentage of votes for Biden and Trump
 ```{r,echo=FALSE}
+electoral_pop_vote <- electoral_pop_vote %>%
+  mutate(`Biden %` = `Biden (D)` / `Total Vote` * 100,
+         `Trump %` = `Trump (R)` / `Total Vote` * 100)
+
 vote_percentage_plot <- ggplot(electoral_pop_vote, aes(x = State)) +
   geom_bar(aes(y = `Biden %`), stat = "identity", fill = "blue", position = position_dodge(width = 0.8), width = 0.4) +
   geom_bar(aes(y = `Trump %`), stat = "identity", fill = "red", position = position_dodge(width = 0.8), width = 0.4) +

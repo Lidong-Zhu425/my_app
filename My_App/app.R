@@ -3,8 +3,8 @@ library(ggplot2)
 library(dplyr)
 
 library(readxl)
-setwd("~/my_app")
-file_path <- "My_App/federalelections2020.xlsx"  
+#setwd("~/my_app")
+file_path <- "federalelections2020.xlsx"  
 # Get the sheet names
 sheet_names <- excel_sheets(file_path)
 
@@ -13,7 +13,7 @@ sheet2 <- read_excel(file_path, sheet = "3. Table 2 Electoral & Pop Vote")
 sheet5 <- read_excel(file_path, sheet = "6. Table 5 P&GVotesCastforCong")
 sheet6 <- read_excel(file_path, sheet = "7. Table 6 Senate by Party")
 
-library(dplyr)
+
 pres_pop_vote <- sheet1 %>%
   slice(4:41) %>%
   select(1:3) %>%
