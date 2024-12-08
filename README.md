@@ -26,5 +26,4 @@ Make sure the following R packages are installed:
 This project is open source and available under the MIT License. Feel free to use, modify, and distribute as needed.
 ## Acknowledgements
 This application uses data from the Federal Elections Commission and geographic data from the U.S. Census Bureau. Special thanks to the developers of the R packages used in this application for providing tools to make data visualization easier.
-## Contact
-For questions or suggestions, please contact the developer at name@university.edu.
+
