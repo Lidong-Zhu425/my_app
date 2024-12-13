@@ -16,11 +16,11 @@ vote_data <- read.csv("election_data.csv")
 vote_data <- vote_data[, !(names(vote_data) %in% c("Biden", "Trump", "AllOthers", "TotalVote", "Winner"))]
 
 # Add columns for Biden and Trump vote percentage
-vote_data$Biden_Percentage <- (vote_data$Biden_P / (vote_data$Biden_P + vote_data$Trump_P)) * 100
-vote_data$Trump_Percentage <- (vote_data$Trump_P / (vote_data$Biden_P + vote_data$Trump_P)) * 100
+vote_data$Biden_Percentage <- round((vote_data$Biden_P / (vote_data$Biden_P + vote_data$Trump_P)) * 100,4)
+vote_data$Trump_Percentage <- round((vote_data$Trump_P / (vote_data$Biden_P + vote_data$Trump_P)) * 100,4)
 
 # Calculate percentage difference between Biden and Trump vote share
-vote_data$Vote_Share_Difference <- vote_data$Biden_Percentage - vote_data$Trump_Percentage
+vote_data$Vote_Share_Difference <- round(vote_data$Biden_Percentage - vote_data$Trump_Percentage,4)
 
 file_path <- "federalelections2020.xlsx"  
 # Get the sheet names
